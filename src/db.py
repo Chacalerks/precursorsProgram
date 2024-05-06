@@ -34,6 +34,12 @@ class MongoDB:
             logging.error(f"Error inserting labs data: {e}")
             raise
 
+    def insert_monthly_report_by_instance(self, report):
+        try:
+            self.get_collection('month_report_by_instance').insert_one(report)
+        except Exception as e:
+            logging.error(f"Error inserting monthly report: {e}")
+            raise
     def insert_monthly_report(self, report):
         try:
             self.get_collection('month_report').insert_one(report)
@@ -41,12 +47,18 @@ class MongoDB:
             logging.error(f"Error inserting monthly report: {e}")
             raise
 
-    def find_reports_by_month_year(self, month, year):
+    def find_reports_by_month_instance(self, month, instance):
         try:
             collection = self.get_collection('month_report')
-            return list(collection.find({"month": month, "year": year}, {"_id": 0, "instance": 1}))
+            return list(collection.find({"month": month, "instance": instance}, {"_id": 0}))
         except Exception as e:
-            logging.error(f"Error fetching reports for {month}-{year}: {e}")
+            logging.error(f"Error fetching reports for {month} at {instance}: {e}")
+            raise
+    def get_month_reports(self):
+        try:
+            self.month_report_by_instance = self.get_collection('month_report_by_instance')            
+        except Exception as e:
+            logging.error(f"Error accessing collection month_reports: {e}")
             raise
 
 def read_labs():

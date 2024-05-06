@@ -1,7 +1,13 @@
 import customtkinter as ctk
 from tkinter import filedialog
 from functions import processFiles
-def create_precurso_control_panel(parent):
+
+
+
+def printPicah(switchBD_var):
+    print("switch toggled, current value:", switchBD_var.get())
+
+def create_precursor_control_panel(parent, switchBD_var):
     # Title for the section
     title_label = ctk.CTkLabel(master=parent, text="Control de Precursores", font=("Roboto", 16))
     title_label.pack(pady=(10, 20))
@@ -31,6 +37,8 @@ def create_precurso_control_panel(parent):
     file_upload_label = ctk.CTkLabel(master=file_upload_area, text="Drag & Drop to Upload File",
                                     fg_color="transparent", bg_color="#4C5C68", height=100)
     file_upload_label.pack(fill="both", expand=True)
-    file_upload_label.bind("<Button-1>", lambda e: processFiles())
+    file_upload_label.bind("<Button-1>", lambda e: processFiles(switchBD_var.get()))
+    
+    
 
 

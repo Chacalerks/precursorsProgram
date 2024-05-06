@@ -110,8 +110,21 @@ def writeSummedSubstances(substances):
             ws.column_dimensions[col[2].column_letter].width = adjusted_width
         count += 1
 
-    for substance in substances.values():
-        row = [substance.name, substance.unityMeasure, substance.inventoryAdditions, substance.additionNumber, substance.inventoryExpenses, substance.finalBalance, substance.expenseJustification]
+    # Iterate over substances (whether it's a list or a dict)
+    items = substances.values() if isinstance(substances, dict) else substances
+    for substance in items:
+        if isinstance(substance, dict):
+            row = [
+                substance['name'], substance['unityMeasure'], substance['inventoryAdditions'],
+                substance['additionNumber'], substance['inventoryExpenses'], substance['finalBalance'],
+                substance['expenseJustification']
+            ]
+        else:
+            row = [
+                substance.name, substance.unityMeasure, substance.inventoryAdditions,
+                substance.additionNumber, substance.inventoryExpenses, substance.finalBalance,
+                substance.expenseJustification
+            ]
         ws.append(row)
 
         # Adjusting text alignment and enabling text wrap for better readability
