@@ -2,7 +2,48 @@ from openpyxl.drawing.image import Image
 from openpyxl.styles import Alignment, PatternFill, Font
 from openpyxl import Workbook
 from tkinter import filedialog
+from tkinter.filedialog import asksaveasfilename
+import datetime
+import os
+import sys
+import locale
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+def scaleImg(image_path):
+    img = Image(image_path)
+    
+    # Original dimensions in cm (as per your specifications)
+    original_width_cm = 5.94
+    original_height_cm = 1.96
+
+    # Convert cm to pixels (1 inch = 2.54 cm, Excel's default DPI = 96)
+    pixels_per_cm = 96 / 2.54
+    width_pixels = original_width_cm * pixels_per_cm
+    height_pixels = original_height_cm * pixels_per_cm
+
+    # Adjust the image size
+    # Note: Excel column width units and row height points may need to be adjusted
+    column_width_unit = 9.14  # default Excel column width unit in pixels
+    row_height_points = 0.75  # points per pixel in row height
+
+    # Set size to fit within a merged cell area of 'A1:C1'
+    target_width_pixels = 3 * (8.5 * column_width_unit)  # Assume each column is 8.43 characters wide
+    target_height_points = 51  # Set row height as previously defined in points
+
+    scale_width = target_width_pixels / width_pixels
+    scale_height = target_height_points / (height_pixels * row_height_points)
+
+    # Apply the smaller of the two scales to maintain aspect ratio
+    scale = min(scale_width, scale_height)
+    
+    img.width = width_pixels * scale
+    img.height = height_pixels * scale
+    
+    return img, target_height_points, target_width_pixels, column_width_unit
 
 def openFileExplorer():
     filetypes = (('Excel files', '*.xlsx *.xls *.xlsm'), ('All files', '*.*'))
@@ -14,15 +55,24 @@ def writeSummedSubstances(substances):
     ws = wb.active
 
     # Load and insert the logo image
-    img = Image('logo.png')  # Make sure 'logo.png' is in your working directory
-    ws.merge_cells('A1:C1')  # Merge for the logo
-    ws.add_image(img, 'A1')
+    image_path = resource_path('img/GASEL_R_QUIMICA.png')  # Updated to use resource_path 
+    img, target_height_points, target_width_pixels, column_width_unit = scaleImg(image_path)
 
-    # Setting row heights
-    ws.row_dimensions[1].height = 50  # First row height
-    ws.row_dimensions[2].height = 2   # Second row height
 
-    # Merging cells for the header
+
+    ws.merge_cells('A1:C1')  # Merge cells for the logo
+    ws.add_image(img, 'A1')  # Place image in the merged cell A1
+
+    # Set row height and column widths to accommodate the image
+    ws.row_dimensions[1].height = target_height_points
+    ws.column_dimensions['A'].width = target_width_pixels / 3 / column_width_unit
+    ws.column_dimensions['B'].width = target_width_pixels / 3 / column_width_unit
+    ws.column_dimensions['C'].width = target_width_pixels / 3 / column_width_unit
+    
+    
+    
+    
+    
     ws.merge_cells('D1:F1')  # Merge for the title "Reporte de Precursores"
     ws['D1'] = 'Reporte de Precursores'
     ws['D1'].alignment = Alignment(horizontal='center', vertical='center')
@@ -69,5 +119,12 @@ def writeSummedSubstances(substances):
             cell.alignment = Alignment(horizontal='center', vertical='center', wrapText=True)
             ws.row_dimensions[ws.max_row].height = 30  # Set the height for other rows
 
-    wb.save("Compiled_Substances_Summed.xlsx")
-
+    
+    month_year = datetime.datetime.now().strftime("%B %Y")  # Format: 'Enero 2024'
+    default_filename = f"Informe precursores {month_year}.xlsx"
+    file_path = asksaveasfilename(defaultextension=".xlsx",
+                                filetypes=[("Excel files", "*.xlsx")],
+                                initialfile=default_filename,
+                                title="Guardar como")
+    if file_path:  # Only save if a file path is provided
+        wb.save(file_path)

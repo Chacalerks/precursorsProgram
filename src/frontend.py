@@ -6,7 +6,7 @@ from db import MongoDB  # Import the MongoDB connection class
 def fetch_reports():
     """Fetch monthly reports from the database and return a list of report names."""
     mongo_db = MongoDB()  # Create an instance of MongoDB connection
-    reports = mongo_db.find_reports_by_month_year(" Mayo", 2024)
+    reports = mongo_db.find_reports_by_month_year("Febrero", 2024)
     return reports
     
 

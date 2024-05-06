@@ -38,9 +38,8 @@ pip-delete-this-directory.txt
 env/
 
 # Environment variables
-.env
+/src/.env
 
 # files
 /data/formulario.xlsm
 
-/.vscode/

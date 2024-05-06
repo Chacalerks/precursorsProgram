@@ -1,39 +1,73 @@
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+import logging
+import ssl
+print(ssl.OPENSSL_VERSION)
 
-# Load environment variables
-load_dotenv()
+# Setup logging
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+print("Ruta del archivo .env:", env_path)
+load_dotenv(env_path)
 
 class MongoDB:
     def __init__(self):
-        self.client = MongoClient(os.getenv('MONGO_URI'))
-        self.db = self.client['precursores']  # Replace 'your_database_name' with your actual database name
+        try:
+            self.client = MongoClient(os.getenv('MONGO_URI'),  serverSelectionTimeoutMS=5000)  # Timeout for initial connection
+            # Attempt to fetch server info to check if connected successfully
+            self.client.server_info()
+            print("valriable de entonr: ",os.getenv('MONGO_URI'))
+            self.db = self.client['precursores']  # Replace 'precursores' with your actual database name if different
+            logging.info("MongoDB connection established.")
+        except Exception as e:
+            logging.error(f"Failed to connect to MongoDB: {e}")
+            raise Exception("Database connection failed.")
 
     def get_collection(self, collection_name):
-        return self.db[collection_name]
-    
+        try:
+            return self.db[collection_name]
+        except Exception as e:
+            logging.error(f"Error accessing collection {collection_name}: {e}")
+            raise
+
     def insert_labs(self, labs):
-        self.get_collection('Labs').insert_many(labs)
-    
+        try:
+            self.get_collection('Labs').insert_many(labs)
+        except Exception as e:
+            logging.error(f"Error inserting labs data: {e}")
+            raise
+
     def insert_monthly_report(self, report):
-        self.get_collection('month_report').insert_one(report)
-    
+        try:
+            self.get_collection('month_report').insert_one(report)
+        except Exception as e:
+            logging.error(f"Error inserting monthly report: {e}")
+            raise
+
     def find_reports_by_month_year(self, month, year):
-        """ Fetch reports for a specific month and year formatted as 'YYYY-MM' """
-        collection = self.get_collection('month_report')  # Assuming your collection is named 'monthly_reports'
-        return list(collection.find({"month": month, "year": year}, {"_id": 0, "instance": 1}))
+        try:
+            collection = self.get_collection('month_report')
+            return list(collection.find({"month": month, "year": year}, {"_id": 0, "instance": 1}))
+        except Exception as e:
+            logging.error(f"Error fetching reports for {month}-{year}: {e}")
+            raise
 
 def read_labs():
-    with open('labs.csv', 'r') as file:
-        for line in file:
+    try:
+        with open('labs.csv', 'r') as file:
             labs = []
-            for lab in line.split(';'):
-                labs.append({'lab': lab.strip()})
+            for line in file:
+                for lab in line.split(';'):
+                    labs.append({'lab': lab.strip()})
             mongo_db.insert_labs(labs)
+    except Exception as e:
+        logging.error(f"Error reading labs from file: {e}")
+        raise
 
 # Example usage:
 if __name__ == "__main__":
-    mongo_db = MongoDB()
-
-    
+    try:
+        mongo_db = MongoDB()
+        # Additional code to utilize the database connection can go here
+    except Exception as e:
+        logging.error(f"Application failed: {e}")

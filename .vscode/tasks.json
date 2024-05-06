@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run main.py with Nodemon",
+        "type": "shell",
+        "command": "nodemon",
+        "args": [
+          "--exec", "./env/Scripts/python",
+          "-w", "src", 
+          "src/main.py"
+        ],
+        "options": {
+          "shell": {
+            "executable": "powershell",
+            "args": ["-Command"]
+          }
+        },
+        "isBackground": true,
+        "problemMatcher": [],
+        "presentation": {
+          "focus": false,
+          "panel": "dedicated"
+        }
+      }
+    ]
+  }
+  

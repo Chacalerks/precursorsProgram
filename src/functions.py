@@ -40,30 +40,30 @@ def processFiles():
         sheet = wb.active
         
         # get the instace in the row 4 and column 3
-        instance = sheet.cell(row=4, column=3).value
+        instance = sheet.cell(row=6, column=3).value
         
         # get the month in the row 3 and column 3
-        month = sheet.cell(row=3, column=3).value
+        month = sheet.cell(row=5, column=3).value
         
-        # get the year in the row 3 and column 13
-        year = sheet.cell(row=3, column=13).value
+        # get the year in the row 4 and column 3
+        year = sheet.cell(row=4, column=3).value
+        
         
         print(instance, month, year)
         
         flag = True
         
-        for row in sheet.iter_rows(min_row=1, values_only=True):
+        for row in sheet.iter_rows(min_row=12, values_only=True):
             #print(row)
             if not ("Lista" in str(row[1])) and row[3] != "-":
                 quimic = Substance(row[1],  # Name
-                row[2],  # Unity Measure
-                row[6],  # Inventory Additions in KG
-                row[7],  # Addition Number
-                row[9],  # Inventory Expenses in KG
-                row[10], # Final Balance
-                row[12]) # Expense Justification
-                
-                
+                    "Kg",  # Unity Measure row 2 in the excel
+                    row[6],  # Inventory Additions KG
+                    row[7],  # Addition Number
+                    row[9],  # Inventory Expenses KG
+                    row[11], # Final Balance (assuming this is what you intend)
+                    row[12]) # Expense Justification
+
                 
                 if quimic.name in substances:
                     
@@ -72,11 +72,12 @@ def processFiles():
                     
                     substances[quimic.name] = quimic
         
-                   
 
         wb.close()
     createReport(substances,instance, month, year)
-    #writeSummedSubstances(substances)
+    
+    # Write the summed substances to a new Excel file
+    writeSummedSubstances(substances)
 
 # Function to call the message box
 def show_message(msg):
