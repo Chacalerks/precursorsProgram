@@ -1,5 +1,5 @@
 from frontend import run_gui
 
 if __name__ == "__main__":
-    print("Estoy reuneando")
+    print("Im running")
     run_gui()

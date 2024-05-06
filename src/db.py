@@ -2,12 +2,10 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 import logging
-import ssl
-print(ssl.OPENSSL_VERSION)
+
 
 # Setup logging
 env_path = os.path.join(os.path.dirname(__file__), '.env')
-print("Ruta del archivo .env:", env_path)
 load_dotenv(env_path)
 
 class MongoDB:
@@ -16,7 +14,6 @@ class MongoDB:
             self.client = MongoClient(os.getenv('MONGO_URI'),  serverSelectionTimeoutMS=5000)  # Timeout for initial connection
             # Attempt to fetch server info to check if connected successfully
             self.client.server_info()
-            print("valriable de entonr: ",os.getenv('MONGO_URI'))
             self.db = self.client['precursores']  # Replace 'precursores' with your actual database name if different
             logging.info("MongoDB connection established.")
         except Exception as e:
