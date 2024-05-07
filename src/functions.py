@@ -10,12 +10,20 @@ import logging
 # ---------------------------------------------------------------
 # Database Connection Setup
 # ---------------------------------------------------------------
-db = MongoDB()
+try:
+    db = MongoDB()
+except Exception as e:
+    logging.error(f"Error : {e}")
+     
 
 def load_collection():
     """Load data collection from the database."""
     global db
-    db.get_month_reports_by_instance()
+    try:
+        db.get_month_reports_by_instance()
+    except Exception as e:
+        logging.error(f"Error: {e}")
+
     db.get_month_reports()
 
 # ---------------------------------------------------------------
@@ -24,10 +32,14 @@ def load_collection():
 def create_report_by_instance(substances, report):
     """Create and store a report by instance in the database."""
     global db
-    substances_array = [substances[key].__dict__ for key in substances]
-    report["substances"] = substances_array
-    report["date"] = datetime.now()
-    return db.insert_monthly_report_by_instance(report)
+    try:
+        substances_array = [substances[key].__dict__ for key in substances]
+        report["substances"] = substances_array
+        report["date"] = datetime.now()
+        return db.insert_monthly_report_by_instance(report)
+    except Exception as e:
+        logging.error(f"Error: {e}")
+    return 0
 
 def create_monthly_report(month, year):
     """Aggregate monthly reports, process them, and create a summarized report."""

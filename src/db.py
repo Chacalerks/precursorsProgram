@@ -11,6 +11,7 @@ load_dotenv(env_path)
 class MongoDB:
     def __init__(self):
         try:
+
             self.client = MongoClient(os.getenv('MONGO_URI'),  serverSelectionTimeoutMS=5000)  # Timeout for initial connection
             # Attempt to fetch server info to check if connected successfully
             self.client.server_info()
@@ -32,7 +33,7 @@ class MongoDB:
             self.get_collection('Labs').insert_many(labs)
         except Exception as e:
             logging.error(f"Error inserting labs data: {e}")
-            raise
+            
 
     def insert_monthly_report_by_instance(self, report):
         try:
