@@ -1,16 +1,23 @@
 import csv
-import os
-import sys
 from datetime import datetime
-import tkinter as tk
+from PIL import Image, ImageTk
+from dotenv import load_dotenv
+import os
 
 def resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller."""
+    import sys, os
     if getattr(sys, 'frozen', False):
+        # we are running in a |PyInstaller| bundle
         base_path = sys._MEIPASS
     else:
+        # we are running in a normal Python environment
         base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+    
+    full_path = os.path.join(base_path, relative_path)
+    print(f'Resource path: {full_path}')  # Debugging output
+    return full_path
+
 
 # Path to the CSV file
 def getLabs():
@@ -76,3 +83,17 @@ def clear_frame(frame):
     # This function will destroy all widgets in the frame, effectively clearing it.
     for widget in frame.winfo_children():
         widget.destroy()
+        
+def resize_image(image_path, new_width):
+    """Resize an image while maintaining its aspect ratio."""
+    image = Image.open(image_path)
+    original_width, original_height = image.size
+    aspect_ratio = original_width / original_height
+    new_height = int(new_width / aspect_ratio)
+    image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    return ImageTk.PhotoImage(image)
+
+def load_environment_vars():
+    """Load environment variables from the .env file."""
+    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+    load_dotenv(env_path)

@@ -1,259 +1,253 @@
+# home_admin_panel.py
 import customtkinter as ctk
 from PIL import Image, ImageTk
-from tkinter import Canvas
-from frontend.utilitiesFun import resource_path, getLabs, getMonths, getYears, getCurrentMonthYear, clear_frame
+from tkinter import Canvas, messagebox
 import tkinter as tk
-from functions import checkLabsReportOnMonth, loadCollection,createMonthInform, writeSummedSubstances
-from tkinter import messagebox
+from frontend.utilitiesFun import resource_path, getLabs, getMonths, getYears, getCurrentMonthYear, clear_frame
+from functions import checkLabsReportOnMonth, loadCollection, createMonthInform, writeSummedSubstances
 
+# ---------------------------------------------------------------
+# Initialization
+# ---------------------------------------------------------------
+
+loadCollection()  
+
+# ---------------------------------------------------------------
+# Utility Functions
+# ---------------------------------------------------------------
 
 def create_info_card(parent, photo_image, label_text, value_text, icon_size=(100, 100)):
-    card = ctk.CTkFrame(master=parent, corner_radius=10, fg_color="#333333")
-    # Resize the icon as per the size provided
-    resized_image = photo_image.resize(icon_size, Image.Resampling.LANCZOS)  # Updated to use LANCZOS resampling
+    """Create and return an information card with an icon and text."""
+    resized_image = photo_image.resize(icon_size, Image.Resampling.LANCZOS)
     photo_image = ImageTk.PhotoImage(resized_image)
-    
+
+    # ------------------- Container card
+    card = ctk.CTkFrame(master=parent, corner_radius=10, fg_color="#333333")
     icon = ctk.CTkLabel(master=card, image=photo_image, text="")
     icon.image = photo_image  # Keep a reference!
     icon.pack(side="left", padx=10, pady=10)
-
-    # Container for text to align it next to the icon
+    
+    # ------------------- Container text_container
     text_container = ctk.CTkFrame(master=card, fg_color="transparent")
     text_container.pack(padx=20, pady=30, side="left", fill="both", expand=True)
+    # Elements of text_container
     label = ctk.CTkLabel(master=text_container, text=label_text, font=("Roboto", 20, "bold"))
-    label.pack(pady=(0,10),side="top", anchor="w")
+    label.pack(pady=(0, 10), side="top", anchor="w")
     value_label = ctk.CTkLabel(master=text_container, text=value_text, font=("Roboto", 16))
     value_label.pack(side="top", anchor="w")
-    
+
     return card
 
-def on_label_click(event, label_text, report):
-    if report == False:
-        messagebox.showinfo("Message", "Hello, this is a message box!")
-    else:
-        writeSummedSubstances(report["substances"])
+def setup_scrollable_frame(parent):
+    """Setup a scrollable frame within the parent container."""
+    
+    canvas = Canvas(parent, background="#333333")
+    scrollbar = tk.Scrollbar(parent, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=scrollbar.set)
 
-def create_month_list_report(parent, photo_image, label_text, report, icon_size=(25, 25)):
-    monthElement = ctk.CTkFrame(master=parent, corner_radius=10, fg_color="transparent")
-    text_container = ctk.CTkFrame(master=monthElement, fg_color="transparent")
-    text_container.pack(pady=(0,5), padx=10, side="top", fill="both", expand=True)
-    
-    # Resize the icon as per the size provided
-    resized_image = photo_image.resize(icon_size, Image.Resampling.LANCZOS)
-    photo_image = ImageTk.PhotoImage(resized_image)
-    
-    label = ctk.CTkLabel(master=text_container, text=label_text, font=("Roboto", 12, "bold"))
-    label.pack(pady=0, side="left", anchor="w")
-    
-    icon = ctk.CTkLabel(master=text_container, image=photo_image, text="")
-    icon.image = photo_image  # Keep a reference!
-    icon.pack(pady=0, side="right", padx=10, anchor="w")
-    
-    # Crear un Canvas para la línea divisoria
-    line_canvas = Canvas(monthElement, height=1, bg='gray', highlightthickness=0)
-    line_canvas.pack(pady=0,fill='x', side="bottom", padx=10)
-    
-    icon.bind("<Button-1>", lambda event, lt=label_text: on_label_click(event, lt, report))
+    scrollbar.pack(side="right", fill="y")
+    canvas.pack(side="left", pady=0, padx=(0, 23), fill="both", expand=True)
 
+    scrollable_frame = ctk.CTkFrame(parent)
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
-    return monthElement
+    scrollable_frame.bind("<Configure>", lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+    return scrollable_frame
 
-def create_labs_list_report(parent, photo_image, label_text, icon_size=(25, 25)):
-    monthElement = ctk.CTkFrame(master=parent, corner_radius=10, fg_color="transparent")
-    text_container = ctk.CTkFrame(master=monthElement, fg_color="transparent")
-    text_container.pack(pady=(0,5), padx=10, side="top", fill="both", expand=True)
-    
-    # Resize the icon as per the size provided
-    resized_image = photo_image.resize(icon_size, Image.Resampling.LANCZOS)
-    photo_image = ImageTk.PhotoImage(resized_image)
-    
-    label = ctk.CTkLabel(master=text_container, text=label_text, font=("Roboto", 12, "bold"))
-    label.pack(pady=0, side="left", anchor="w")
-    
-    icon = ctk.CTkLabel(master=text_container, image=photo_image, text="")
-    icon.image = photo_image  # Keep a reference!
-    icon.pack(pady=0, side="right", padx=10, anchor="w")
-    
-    # Crear un Canvas para la línea divisoria
-    line_canvas = Canvas(monthElement, height=1, bg='gray', highlightthickness=0)
-    line_canvas.pack(pady=0,fill='x', side="bottom", padx=10)
-    
-    icon.bind("<Button-1>", lambda event, lt=label_text: on_label_click(event, lt))
+# ---------------------------------------------------------------
+# Event Handlers
+# ---------------------------------------------------------------
 
+def on_click_excel_icon(event, label_text, report):
+    """Handle clicks on labels which may trigger additional actions."""
+    try:
+        if not report:
+            messagebox.showinfo("Message", "Hello, this is a message box!")
+        else:
+            writeSummedSubstances(report["substances"])
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+# ---------------------------------------------------------------
+# Specific Report Setup Functions
+# ---------------------------------------------------------------
 
-    return monthElement
+def setup_month_reports(month_report_container):
+    """Setup and populate month reports in their designated container."""
+    currentYear, _ = getCurrentMonthYear()
+    months = getMonths()
 
-
+    # ------------------- Container header_container (text, combobox)
+    header_container = ctk.CTkFrame(master=month_report_container, fg_color="transparent")
+    header_container.pack(padx=20, pady=(10, 20), fill="x", expand=True)
     
-    
+    # ------------------- Container list_month_report (elments that will be loaded)
+    list_month_report = ctk.CTkFrame(master=month_report_container, fg_color="transparent")
+    list_month_report.pack(padx=20, pady=(10, 20), fill="x", expand=True)
 
-def create_home_panel(parent, asdf):
+    # Label for the combo box
+    year_label = ctk.CTkLabel(master=header_container, text="Año a consultar: ", font=("Roboto", 14, "bold"))
+    year_label.pack(side="left", anchor="w")
+
+    # Combo box to select the year
+    yearComboBox = ctk.CTkComboBox(master=header_container, values=getYears())
+    yearComboBox.set(str(currentYear))  # Set the current year as default
+    yearComboBox.pack(side="right", fill="x", expand=True)
+
+    # Attach the callback to update reports based on selected year
+    yearComboBox.configure(command=lambda choice: update_month_reports(month_report_container, choice))
+
+    # Load the reports for the initially selected year
+    load_month_report(list_month_report, currentYear)
+
+def setup_lab_reports(labs_report_container):
+    """Setup and populate lab reports in their designated container."""
+    try:
+        labs = getLabs()
+        scrollable_frame = setup_scrollable_frame(labs_report_container)
+
+        for lab in labs:
+            report = checkLabsReportOnMonth(getCurrentMonthYear()[1], lab)
+            icon_path = resource_path("src/img/accept.png") if report else resource_path("src/img/cancel.png")
+            create_labs_list_report(scrollable_frame, Image.open(icon_path), lab).pack()
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to load lab reports: {str(e)}")
+        
+        
+# ---------------------------------------------------------------
+# Panel Creation Functions
+# ---------------------------------------------------------------
+
+def create_home_panel(parent, _):
+    """Create the main home panel with reports and data."""
     title_label = ctk.CTkLabel(master=parent, text="Reportes y Datos", font=("Roboto", 24), anchor="w")
     title_label.pack(pady=(40, 20), padx=20, fill="x")
 
     cards_container = ctk.CTkFrame(master=parent, fg_color="transparent")
     cards_container.pack(pady=10, padx=20, fill="x")
 
-    # Load image for icons
-    iconPath = resource_path("src/img/flask.png")
-    iconImage = Image.open(iconPath)
+    icon_image = Image.open(resource_path("src/img/flask.png"))
+    card1 = create_info_card(cards_container, icon_image, "Mayor Elemento en Inventario", "Alcohol Etílico")
+    card1.pack(side="left", padx=(0, 30), fill="y")
+    card2 = create_info_card(cards_container, icon_image, "Menor Elemento en Inventario", "Anhídrido acético")
+    card2.pack(side="left", padx=(0, 30), fill="y")
 
-    # Create cards with images
-    card1 = create_info_card(cards_container, iconImage, "Mayor Elemento en Inventario", "Alcohol Etílico")
-    card1.pack(side="left", padx=(0,30), fill="y")
-
-    card2 = create_info_card(cards_container, iconImage, "Menor Elemento en Inventario", "Anhídrido acético")
-    card2.pack(side="left", padx=(0,30), fill="y")
-
-    # ---------------------------------------------------- List of Months and Labs
+    # ------------------- Container report_container 
     report_container = ctk.CTkFrame(master=parent, fg_color="transparent")
-    report_container.pack( pady=10, padx=20, fill="x")
-    
-    loadCollection()
-    
-    #------------------------ reports by month   
+    report_container.pack(pady=10, padx=20, fill="x")
+
+    # ------------------- Container month_report_container
     month_report_container = ctk.CTkFrame(master=report_container)
-    month_report_container.pack(side="left", padx=(0,20), fill="y")
-    
-    text_header_month_report_container = ctk.CTkFrame(master=month_report_container, fg_color="transparent")
-    text_header_month_report_container.pack(side="top", padx=20, fill="both", expand=True)
-    
-    label = ctk.CTkLabel(master=text_header_month_report_container, text="Año a consultar: ", font=("Roboto", 14, "bold"))
-    label.pack(pady=0, side="left", anchor="w")
+    month_report_container.pack(side="left", padx=(0, 20), fill="y")
 
-    def combobox_callback(choice):
-        loadCollection()
-        monthReport = []
-        for i in monthArray:            
-            monthReport.append(createMonthInform(i, choice))
-
-    
-    currentYear, currentMonthIndex = getCurrentMonthYear()
-
-    yearComboBoxValues = getYears()
-    #--- load month list
-    monthArray = getMonths()
-    labs = getLabs()
-    
-    yearComboBox = ctk.CTkComboBox(master=text_header_month_report_container, values=yearComboBoxValues,
-                                        command=combobox_callback)
-    
-    yearComboBox.set(str(currentYear))
-    yearComboBox.pack(side="right", pady=(5,10))
-    
-    # Load image for icons
-    excelIconPath = resource_path("src/img/excel.png")
-    excelIconImage = Image.open(excelIconPath)
-    
-    
-    list_month_container = ctk.CTkFrame(master=month_report_container, fg_color="transparent")
-    list_month_container.pack(padx=(0,20), fill="y") 
-    
-    # ----get
-    monthReport = []
-    for i in monthArray:            
-        monthReport.append(createMonthInform(i, currentYear))
-        
-    def load_month_report():        
-        elements = []
-        index = 0
-        for i in monthArray:
-            # Load image for icons
-            valueReport = monthReport[index]
-            if valueReport != False:
-                excelIconPath = resource_path("src/img/excel.png")
-            else:
-                excelIconPath = resource_path("src/img/excel_transparent.png")
-            excelIconImage = Image.open(excelIconPath)
-            element = create_month_list_report(list_month_container,excelIconImage, i, valueReport)
-            element.pack()        
-            elements.append(element)
-            index +=1
-    
-    load_month_report()
-    #------------------------ reports by Labs
+    # ------------------- Container labs_report_container
     labs_report_container = ctk.CTkFrame(master=report_container, corner_radius=10)
     labs_report_container.pack(side="left", fill="both")
+
+    # Set up month and lab report sections
+    setup_month_reports(month_report_container)
+    setup_lab_reports(labs_report_container)
+
+
+
+# ---------------------------------------------------------------
+# Helper Functions
+# ---------------------------------------------------------------
+
+def update_month_reports(container, year):
+    """Clear and update the month reports based on the selected year."""
+    clear_frame(container)  # Clear existing content in the container
+    try:
+        months = getMonths()
+        month_reports = [createMonthInform(month, year) for month in months]
+
+        for month, report in zip(months, month_reports):
+            icon_path = resource_path("src/img/excel.png" if report else "src/img/excel_transparent.png")
+            excel_icon_image = Image.open(icon_path)
+            month_element = create_month_list_report(container, excel_icon_image, month, report, icon_size=(25, 25))
+            month_element.pack(pady=(0, 10), fill='x', expand=True)
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to update month reports: {str(e)}")
+
+# ---------------------------------------------------------------
+# Detailed Report Setup Functions
+# ---------------------------------------------------------------
+
+def create_month_list_report(parent, photo_image, label_text, report, icon_size=(25, 25)):
+    """Create and return a single month report element with an icon and text."""
+    month_element = ctk.CTkFrame(master=parent, corner_radius=10, fg_color="transparent")
+    text_container = ctk.CTkFrame(master=month_element, fg_color="transparent")
+    text_container.pack(pady=(0,5), padx=10, side="top", fill="both", expand=True)
+
+    resized_image = photo_image.resize(icon_size, Image.Resampling.LANCZOS)
+    photo_image = ImageTk.PhotoImage(resized_image)
     
-    # --- containers
-    text_header_lab_report_container = ctk.CTkFrame(master=labs_report_container, fg_color="transparent")
-    text_header_lab_report_container.pack(side="top", padx=20, fill="x", expand=True)
-    
-    lab_list_report_container = ctk.CTkFrame(master=labs_report_container, fg_color="transparent")
-    lab_list_report_container.pack(side="top", padx=20, fill="both", expand=True)
-    
-    # --- text_header_lab_report_container elements
-    label = ctk.CTkLabel(master=text_header_lab_report_container, text="Mes a Consultar: ", font=("Roboto", 14, "bold"))
+    label = ctk.CTkLabel(master=text_container, text=label_text, font=("Roboto", 12, "bold"))
     label.pack(pady=0, side="left", anchor="w")
     
-    def monthCombobox_callback(choice):        
-        labsElements = []
-        clear_frame(scrollable_frame)
-        loadCollection()
-        for i in labs:
-            report = checkLabsReportOnMonth(choice, i)
-            if report == False:
-                statusIcon = resource_path("src/img/cancel.png")
-            else:
-                statusIcon = resource_path("src/img/accept.png")
-            statusIconImage = Image.open(statusIcon)
-            
-            element = create_labs_list_report(scrollable_frame,statusIconImage, i)
-            element.pack()        
-            labsElements.append(element)
+    icon = ctk.CTkLabel(master=text_container, image=photo_image, text="")
+    icon.image = photo_image  # Keep a reference!
+    icon.pack(pady=0, side="right", padx=10, anchor="w")
     
-    currentYear, currentMonthIndex = getCurrentMonthYear()
+    line_canvas = Canvas(month_element, height=1, bg='gray', highlightthickness=0)
+    line_canvas.pack(pady=0, fill='x', side="bottom", padx=10)
+    
+    icon.bind("<Button-1>", lambda event, lt=label_text: on_click_excel_icon(event, lt, report))
 
-    monthsComboBoxValues = monthArray
-    monthComboBox = ctk.CTkComboBox(master=text_header_lab_report_container, values=monthsComboBoxValues,
-                                        command=monthCombobox_callback)
-    
-    monthComboBox.set(monthsComboBoxValues[currentMonthIndex])
-    monthComboBox.pack(side="right", pady=(5,10))
-    
-    # --- lab_list_report_container elements       
-    canvas = Canvas(lab_list_report_container, background="#333333")
-    scrollbar = tk.Scrollbar(lab_list_report_container, orient="vertical", command=canvas.yview)
-    canvas.configure(yscrollcommand=scrollbar.set)
+    return month_element
 
-    # Pack the scrollbar to the right, fill in the y-direction
-    scrollbar.pack(side="right", fill="y")
-    # Pack the canvas to expand and fill both directions
-    canvas.pack(side="left",pady=0, padx=(0,23), fill="y", expand=True)
+def create_labs_list_report(parent, photo_image, label_text, icon_size=(25, 25)):
+    """Create and return a single lab report element with an icon and text."""
+    lab_element = ctk.CTkFrame(master=parent, corner_radius=10, fg_color="transparent")
+    text_container = ctk.CTkFrame(master=lab_element, fg_color="transparent")
+    text_container.pack(pady=(0,5), padx=10, side="top", fill="both", expand=True)
 
-    # Create a CTkFrame that will contain the content
-    scrollable_frame = ctk.CTkFrame(lab_list_report_container)
+    resized_image = photo_image.resize(icon_size, Image.Resampling.LANCZOS)
+    photo_image = ImageTk.PhotoImage(resized_image)
     
-    # Create a window on the canvas to hold the scrollable_frame
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    label = ctk.CTkLabel(master=text_container, text=label_text, font=("Roboto", 12, "bold"))
+    label.pack(pady=0, side="left", anchor="w")
+    
+    icon = ctk.CTkLabel(master=text_container, image=photo_image, text="")
+    icon.image = photo_image  # Keep a reference!
+    icon.pack(pady=0, side="right", padx=10, anchor="w")
+    
+    line_canvas = Canvas(lab_element, height=1, bg='gray', highlightthickness=0)
+    line_canvas.pack(pady=0, fill='x', side="bottom", padx=10)
+    
+    return lab_element
 
-    labs = getLabs()
-    labsElements = []
-    
-    for i in labs:
-        report_by_instance = checkLabsReportOnMonth(monthArray[currentMonthIndex], i)
-        if report_by_instance == False:
-            statusIcon = resource_path("src/img/cancel.png")
-        else:
-            statusIcon = resource_path("src/img/accept.png")
-        statusIconImage = Image.open(statusIcon)
-        
-        element = create_labs_list_report(scrollable_frame,statusIconImage, i)
-        element.pack()        
-        labsElements.append(element)
-        
+# ---------------------------------------------------------------
+# Update and Load Functions
+# ---------------------------------------------------------------
 
-        
-    # Function to update the scrolling region to all of the canvas
-    def on_frame_configure(event):
-        # Update the scroll region to encompass the inner frame
-        canvas.configure(scrollregion=canvas.bbox("all"))
+def update_month_reports(container, year):
+    """Update the month reports based on the selected year."""
+    clear_frame(container)
+    try:
+        months = getMonths()
+        month_reports = [createMonthInform(month, year) for month in months]
+        excel_icon_path = resource_path("src/img/excel.png")
 
-    # Bind the configuration event of the scrollable_frame to on_frame_configure
-    scrollable_frame.bind("<Configure>", on_frame_configure)
+        for month, report in zip(months, month_reports):
+            icon_path = excel_icon_path if report else resource_path("src/img/excel_transparent.png")
+            month_element = create_month_list_report(container, Image.open(icon_path), month, report, icon_size=(25, 25))
+            month_element.pack(pady=(0, 10), fill='x', expand=True)
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to update month reports: {str(e)}")
 
-    
-    
-    
-    
-    
+def load_month_report(container, currentYear):
+    """Load initial month reports based on the current year."""
+    try:
+        months = getMonths()
+        month_reports = [createMonthInform(month, currentYear) for month in months]
+
+        for month, report in zip(months, month_reports):
+            icon_path = resource_path("src/img/excel.png" if report else "src/img/excel_transparent.png")
+            excel_icon_image = Image.open(icon_path)
+            month_element = create_month_list_report(container, excel_icon_image, month, report, icon_size=(25, 25))
+            month_element.pack(pady=(0, 10), fill='x', expand=True)
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to load initial month reports: {str(e)}")
