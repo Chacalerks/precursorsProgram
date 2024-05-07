@@ -2,7 +2,7 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 import logging
-
+from bson import ObjectId
 
 # Setup logging
 env_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -37,6 +37,7 @@ class MongoDB:
     def insert_monthly_report_by_instance(self, report):
         try:
             self.get_collection('month_report_by_instance').insert_one(report)
+            return True
         except Exception as e:
             logging.error(f"Error inserting monthly report: {e}")
             raise
@@ -46,6 +47,21 @@ class MongoDB:
         except Exception as e:
             logging.error(f"Error inserting monthly report: {e}")
             raise
+    def update_monthly_report(self, report):
+        try:
+            # Extract the _id from the report and convert it to ObjectId
+            document_id = ObjectId(report['_id'])
+            collection = self.get_collection('month_report')
+            # Update the document with new report data, using the _id field
+            result = collection.update_one(
+                {"_id": document_id},    # Query document using ObjectId
+                {"$set": report},        # Update document
+                upsert=True              # Insert if not exists (usually not necessary with _id)
+            )
+            logging.info(f"Modified {result.modified_count} documents, Upserted {result.upserted_id}")
+        except Exception as e:
+            logging.error(f"Error updating monthly report based on _id: {e}")
+            raise
 
     def find_reports_by_month_instance(self, month, instance):
         try:
@@ -54,9 +70,15 @@ class MongoDB:
         except Exception as e:
             logging.error(f"Error fetching reports for {month} at {instance}: {e}")
             raise
-    def get_month_reports(self):
+    def get_month_reports_by_instance(self):
         try:
             self.month_report_by_instance = self.get_collection('month_report_by_instance')            
+        except Exception as e:
+            logging.error(f"Error accessing collection month_reports: {e}")
+            raise
+    def get_month_reports(self):
+        try:
+            self.month_report = self.get_collection('month_report')            
         except Exception as e:
             logging.error(f"Error accessing collection month_reports: {e}")
             raise

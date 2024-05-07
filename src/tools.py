@@ -9,9 +9,19 @@ import sys
 import locale
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    import sys, os
+    if getattr(sys, 'frozen', False):
+        # we are running in a |PyInstaller| bundle
+        base_path = sys._MEIPASS
+    else:
+        # we are running in a normal Python environment
+        base_path = os.path.abspath(".")
+    
+    full_path = os.path.join(base_path, relative_path)
+    print(f'Resource path: {full_path}')  # Debugging output
+    return full_path
+
 
 def scaleImg(image_path):
     img = Image(image_path)
@@ -50,12 +60,12 @@ def openFileExplorer():
     filepaths = filedialog.askopenfilenames(title='Open files', initialdir='.', filetypes=filetypes)
     return filepaths
 
-def writeSummedSubstances(substances):
+def writeSummedSubstances(substances, month_year = ""):
     wb = Workbook()
     ws = wb.active
 
     # Load and insert the logo image
-    image_path = resource_path('img/GASEL_R_QUIMICA.png')  # Updated to use resource_path 
+    image_path = resource_path('src/img/GASEL_R_QUIMICA.png')  # Updated to use resource_path 
     img, target_height_points, target_width_pixels, column_width_unit = scaleImg(image_path)
 
 
@@ -133,7 +143,8 @@ def writeSummedSubstances(substances):
             ws.row_dimensions[ws.max_row].height = 30  # Set the height for other rows
 
     
-    month_year = datetime.datetime.now().strftime("%B %Y")  # Format: 'Enero 2024'
+    if month_year == "":
+        month_year = datetime.datetime.now().strftime("%B %Y")  # Format: 'Enero 2024'
     default_filename = f"Informe precursores {month_year}.xlsx"
     file_path = asksaveasfilename(defaultextension=".xlsx",
                                 filetypes=[("Excel files", "*.xlsx")],

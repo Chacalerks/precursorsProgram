@@ -2,8 +2,9 @@
 import customtkinter as ctk
 import os
 from .admin_view import run_admin_view  # Import from the same package (frontend)
+from .guest_view import run_guest_view
 from frontend.utilitiesFun import load_environment_vars, resource_path, resize_image
-
+from tkinter import Canvas, messagebox
 
 # ---------------------------------------------------------------
 # Event Handlers
@@ -12,17 +13,20 @@ from frontend.utilitiesFun import load_environment_vars, resource_path, resize_i
 def handle_admin_login(password_entry, app):
     """Function to handle Admin login."""
     password = password_entry.get()
-    if password != os.getenv('PASS'):
+    if password == os.getenv('PASS'):
         print("Login True")
         app.destroy()  # Close the login window
         admin_app = run_admin_view()  # Start the admin panel
         admin_app.mainloop()
     else:
+        messagebox.showinfo("Incorrecto", "La contraseña incresada es incorrecta")
         print("Password false")
 
-def handle_guest_login():
+def handle_guest_login(app):
     """Function to handle Guest login."""
-    print("Guest login")
+    app.destroy()  # Close the login window
+    guest_app = run_guest_view()  # Start the admin panel
+    guest_app.mainloop()
 
 # ---------------------------------------------------------------
 # GUI Setup
@@ -69,7 +73,7 @@ def add_buttons(login_frame, password_entry, app):
     admin_login_button = ctk.CTkButton(master=login_frame, text="Login as Admin", command=lambda: handle_admin_login(password_entry, app),
                                     height=40, width=300, corner_radius=10, font=("Roboto", 12))
     admin_login_button.pack(pady=(50, 20))
-    guest_login_button = ctk.CTkButton(master=login_frame, text="Enter as Guest", command=handle_guest_login,
+    guest_login_button = ctk.CTkButton(master=login_frame, text="Enter as Guest", command= lambda: handle_guest_login(app),
                                     bg_color='transparent', fg_color="#343638", hover_color="#565B5E", text_color="white",
                                     height=40, width=300, corner_radius=10, font=("Roboto", 12))
     guest_login_button.pack()
@@ -81,6 +85,7 @@ def run_gui():
     app = setup_gui()
     login_frame = setup_login_frame(app)
     password_entry = add_login_elements(login_frame)
+    #handle_admin_login(password_entry, app)
     add_buttons(login_frame, password_entry, app)
     app.mainloop()
 

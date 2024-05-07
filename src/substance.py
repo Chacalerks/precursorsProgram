@@ -20,5 +20,5 @@ class Substance:
         self.inventoryAdditions += other.inventoryAdditions
         self.inventoryExpenses += other.inventoryExpenses
         self.finalBalance += other.finalBalance
-        self.expenseJustification += "\n" + str(other.expenseJustification)
-        self.additionNumber += "\n" + str(other.additionNumber)
+        self.expenseJustification += "\n" + str(other.expenseJustification) if other.expenseJustification != "" else ""
+        self.additionNumber += "\n" + str(other.additionNumber) if other.additionNumber != "" else ""
